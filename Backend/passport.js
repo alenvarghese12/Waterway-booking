@@ -8,8 +8,8 @@ const { User } = require("./model/userData");
 
 passport.use(
   new OAuth2Strategy({
-    clientID: "250842129810-vlpd713grrecgkr28tdcs93ppi4rkam6.apps.googleusercontent.com",
-    clientSecret: "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",
+    clientID: PROCESS.ENV.CLIENT_ID,
+    clientSecret: PROCESS.ENV.CLIENT_SECRET,
     callbackURL: "/oauth",
     scope: ["profile", "email"]
   },

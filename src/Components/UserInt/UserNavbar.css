@@ -1,0 +1,90 @@
+/* Top Navbar */
+.top-navbar {
+  background-color: #efeff7;
+  color: rgb(201, 216, 243);
+  padding: 10px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Space between elements */
+}
+
+.top-navbar .nav-link {
+  color: rgb(14, 13, 13);
+  text-decoration: none;
+  padding: 10px;
+  transition: background-color 0.3s ease;
+}
+.nav-links {
+    flex: 1;
+    display: flex;
+    justify-content: center; 
+    margin-left: 1200px;/* Center the View Boat link */
+  }
+.top-navbar .nav-link:hover {
+  background-color: #cad4f0;
+}
+
+.top-navbar .sidebar-toggle {
+  background: none;
+  border: none;
+  color: rgb(19, 17, 17);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 10px;
+}
+
+/* Waterway Bookings Title */
+.navbar-title {
+  color: rgb(32, 31, 31);
+  text-align: center;
+  margin: 0;
+  padding: 10px;
+  line-height: 1.2; /* Adjust line height for better spacing */
+}
+
+/* Position View Boat Link */
+.view-boat {
+  margin-left: auto; /* Push this link to the right */
+}
+
+/* Side Navbar */
+.side-navbar {
+  position: fixed;
+  top: 60px; /* Adjust based on top navbar height */
+  left: -200px; /* Initially hidden (off-screen) */
+  width: 200px;
+  background-color: #efeffa;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: left 0.3s ease;
+}
+
+.side-navbar.open {
+  left: 0; /* Sidebar appears on toggle */
+}
+
+.side-navbar .nav-link {
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+  display: block;
+  transition: background-color 0.3s ease;
+}
+
+.side-navbar .nav-link:hover {
+  background-color: #cebebe;
+}
+
+/* Main Content Area */
+.main-content {
+  margin-left: 200px;
+  padding: 20px;
+  margin-top: 60px; /* Adjust based on top navbar height */
+}

@@ -14,12 +14,14 @@ import EditUser from './Components/Admin/EditUser';
 import BoatRegistration from './Components/Boatowner/BoatRegistration';
 import BoatList from './Components/Boatowner/BoatList';
 import Boatlist from './Components/Admin/Boatlist';
+import UserBoatList from './Components/UserInt/UserBoatList';
+import BookingPage from './Components/UserInt/BookingPage';
 
 const AppWrapper = () => {
   const location = useLocation();
   
   // Define paths where Navbar should not be shown
-  const noNavbarPaths = [ '/userint', '/admin/*', '/boatowner/*'];  // Updated the admin path
+  const noNavbarPaths = [ '/userint/*', '/admin/*', '/boatowner/*'];  // Updated the admin path
 
   // Determine if Navbar should be rendered
   const showNavbar = !noNavbarPaths.includes(location.pathname);
@@ -34,6 +36,9 @@ const AppWrapper = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/userint" element={<UserInt />} />
         <Route path="/logout" element={<Logoutb />} />
+        {/* <Route path="/booking" element={<BookingPage />} /> */}
+
+        {/* <Route path="/userboatl" element={<UserBoatList />} /> */}
     
 
         {/* Admin layout with nested routes */}
@@ -50,6 +55,14 @@ const AppWrapper = () => {
           <Route path="boatlist" element={<BoatList />} />
           
         </Route>
+
+        <Route path="/userint/*" element={<UserInt />}>
+          <Route path="userboatl" element={<UserBoatList />} />
+          <Route path="booking" element={<BookingPage />} />
+     
+          
+        </Route>
+
       </Routes>
     </div>
   );

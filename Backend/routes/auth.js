@@ -131,15 +131,28 @@ router.post("/login", async (req, res) => {
 });
 
 // Logout endpoint
+// router.post('/logout', (req, res) => {
+//     req.session.destroy(err => {
+//         if (err) {
+//             return res.status(500).send({ message: "Error logging out" });
+//         }
+//         res.clearCookie('connect.sid'); // Clear session cookie
+//         res.send({ message: "Logged out successfully" });
+//     });
+// });
+
 router.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
             return res.status(500).send({ message: "Error logging out" });
         }
         res.clearCookie('connect.sid'); // Clear session cookie
-        res.send({ message: "Logged out successfully" });
+        res.status(200).send({ message: "Logged out successfully" });
     });
 });
+
+
+
 
 // Get all users
 router.get("/users", async (req, res) => {
@@ -153,17 +166,28 @@ router.get("/users", async (req, res) => {
 });
 
 // Delete a user by ID
-router.delete('/users/:id', async (req, res) => {
+// Update user status to Inactive instead of deleting
+router.delete('/users/:userId', async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json({ message: 'User deleted successfully' });
+      const userId = req.params.userId;
+      
+      // Update user's status to 'Inactive'
+      const updatedUser = await User.findByIdAndUpdate(
+        userId, 
+        { status: 'Inactive' }, 
+        { new: true }
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      res.status(200).json({ message: 'User deactivated successfully', user: updatedUser });
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting user' });
+      res.status(500).json({ error: 'Failed to deactivate user' });
     }
-});
+  });
+  
 
 // Get a user by ID
 router.get('/users/:id', async (req, res) => {

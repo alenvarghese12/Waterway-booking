@@ -5,18 +5,29 @@ import { useNavigate } from 'react-router-dom';
 
 const UserBoatList = () => {
   const [boats, setBoats] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
 
   const handleBookNow = (boat) => {
-    navigate('/userint/booking', { state: { boat } }); // Navigating to the booking page with boat data
+    navigate('/userint/booking', { state: { boat } });
   };
 
-  // Fetch boats from the backend
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
   useEffect(() => {
     const fetchBoats = async () => {
       try {
         const response = await axios.get('http://localhost:8080/api/boats/boatsd');
-        setBoats(response.data); // Store boat data in state
+        setBoats(response.data);
       } catch (error) {
         console.error('Failed to fetch boats', error);
       }
@@ -31,10 +42,11 @@ const UserBoatList = () => {
       <div className="boat-grid">
         {boats.map((boat) => (
           <div key={boat._id} className="boat-card">
-              <img
-              src={`http://localhost:8080/uploads/${boat.image}`} // Assuming boat image is saved in an 'uploads' folder on the server
+            <img
+              src={`http://localhost:8080/uploads/${boat.image}`}
               alt={boat.boatName}
               className="boat-image"
+              onClick={() => handleImageClick(`http://localhost:8080/uploads/${boat.image}`)} // Zoom on image click
             />
             <h3>{boat.boatName}</h3>
             <p><strong>Type:</strong> {boat.boatType}</p>
@@ -46,8 +58,17 @@ const UserBoatList = () => {
           </div>
         ))}
       </div>
+
+      {/* Modal for zoomed image */}
+      {isModalOpen && (
+        <div className="modal" onClick={closeModal}>
+          <span className="close" onClick={closeModal}>&times;</span>
+          <img className="modal-image" src={selectedImage} alt="Zoomed" />
+        </div>
+      )}
     </div>
   );
 };
 
 export default UserBoatList;
+

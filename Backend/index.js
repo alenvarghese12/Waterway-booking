@@ -23,7 +23,13 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI || 'mongodb+srv://reg:reg1@cluster0.3eg1v.mongodb.net/demo?retryWrites=true&w=majority&appName=Cluster0' }), // Store session in MongoDB
-    cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+        httpOnly: true,
+        secure: false, // Set to true if using HTTPS
+        sameSite: 'lax'
+    }
+// 1 day
 }));
 
 // routes

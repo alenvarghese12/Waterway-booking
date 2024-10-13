@@ -169,6 +169,12 @@ const BoatList = () => {
             {boats.map(boat => (
               <li key={boat._id}>
                 <h3>{boat.boatName} ({boat.boatType})</h3>
+                <img
+              src={`http://localhost:8080/uploads/${boat.image}`}
+              alt={boat.boatName}
+              className="boat-image"
+              onClick={() => handleImageClick(`http://localhost:8080/uploads/${boat.image}`)} // Zoom on image click
+            />
                 <p>Description: {boat.description}</p>
                 <p>Price: {boat.price}</p>
                 <p>Capacity: {boat.capacity}</p>

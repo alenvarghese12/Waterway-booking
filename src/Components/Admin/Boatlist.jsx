@@ -41,11 +41,13 @@ const Boatlist = () => {
               alt={boat.boatName}
               className="boat-image"
             />
-            <div className="boat-details">
+            <div className="boat-details">    
               <h3>{boat.boatName}</h3>
               <p><strong>Type:</strong> {boat.boatType}</p>
-              <p><strong>Description:</strong> {boat.description}</p>
-              <p><strong>Price:</strong> Rs. {boat.price}</p>
+              <div className="dcontainer">
+    <p>Description: {boat.description}</p>
+</div>
+              <p><strong>Price:</strong> Rs. {boat.price}  {boat.priceType}</p>
               <p><strong>Speed:</strong> {boat.speed} km/h</p>
               <p><strong>Capacity:</strong> {boat.capacity} people</p>
               <p><strong>Engine Type:</strong> {boat.engineType}</p>

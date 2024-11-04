@@ -8,16 +8,22 @@ const Logoutb = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:8080/api/auth/logout'); // Adjust URL as needed
-      localStorage.removeItem('token'); // Optionally clear local storage
-      navigate('/login'); // Redirect to login page after logout
+     
+      const response = await axios.post('http://localhost:8080/api/auth/logoutp');
+      if (response.data.message === 'Logged out successfully') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('email');
+        // session.removeItem('user'); // Remove user session data from localStorage
+        // window.location.href = '/login'; // Redirect to the login page after logout
+        navigate('/login'); 
+      }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Error during logout:', error);
     }
   };
-
+  
   return (
-    <button className="logout-button" onClick={handleLogout}>Logout</button>
+    <button id='logout' className="logout-button" onClick={handleLogout}>Logout</button>
   );
 };
 

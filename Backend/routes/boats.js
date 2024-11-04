@@ -4,7 +4,9 @@ const multer = require('multer');
 const Boat = require('../model/boat');  // Ensure this model is correct
 const { registerBoat } = require('../controllers/boatController'); // Add your controllers if applicable
 const Boatreg = require('../model/boatreg');
-
+const authenticateToken = require('../middleware/authMiddleware'); 
+const mongoose = require('mongoose');
+// Make sure this line exists
 
 // POST route to add a new boat type
 router.post('/', async (req, res) => {
@@ -110,7 +112,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // POST route for registering a boat with file uploads
-router.post('/register', upload.fields([{ name: 'image' }, { name: 'licenseDocument' }]), registerBoat);
+router.post('/register', authenticateToken, upload.fields([{ name: 'image' }, { name: 'licenseDocument' }]), registerBoat);
 
 // GET route for fetching available boat types
 // router.get('/boatTypes', getBoatTypes);
@@ -120,21 +122,71 @@ router.post('/register', upload.fields([{ name: 'image' }, { name: 'licenseDocum
 // Define your routes here
 router.get('/boatsd', async (req, res) => {
   try {
-    const boats = await Boatreg.find();
-    res.status(200).json(boats);
+    const boats = await Boatreg.find({ verified: true }); // Fetch only verified boats
+    res.status(200).json(boats); // Send the fetched boats
   } catch (error) {
     res.status(500).send({ message: 'Failed to fetch boats', error: error.message });
   }
 });
 
+
+
+router.get('/boatsdb', async (req, res) => {
+  try {
+      const ownerId = req.query.ownerId; // Get the ownerId from the query parameters
+
+      if (ownerId && !mongoose.Types.ObjectId.isValid(ownerId)) {
+          return res.status(400).send({ message: 'Invalid owner ID' });
+      }
+
+      // Properly create ObjectId for querying
+      const query = ownerId ? { verified: true, ownerId: new mongoose.Types.ObjectId(ownerId), status:'active' } : { verified: true, status:'active' };
+      
+      console.log('OwnerId:', ownerId);  // For debugging
+      console.log('Query:', query);      // For debugging
+
+      const boats = await Boatreg.find(query);
+      
+      console.log('Boats found:', boats); // Log found boats for debugging
+
+      if (!boats || boats.length === 0) {
+          return res.status(404).send({ message: 'No boats found' });
+      }
+
+      res.status(200).json(boats);
+  } catch (error) {
+      console.error('Error fetching boats:', error);
+      res.status(500).send({ message: 'Failed to fetch boats', error: error.message });
+  }
+});
+
+
 // DELETE Route to Remove a Boat
-router.delete('/boatsd/:id', async (req, res) => {
+// router.delete('/boatsde/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     await Boatreg.findByIdAndDelete(id);
+//     res.status(200).send({ message: 'Boat deleted successfully' });
+//   } catch (error) {
+//     res.status(500).send({ message: 'Failed to delete boat', error: error.message });
+//   }
+// });
+
+
+router.put('/boatsde/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await Boatreg.findByIdAndDelete(id);
-    res.status(200).send({ message: 'Boat deleted successfully' });
+
+    // Update the boat's status to 'Inactive'
+    const updatedBoat = await Boatreg.findByIdAndUpdate(id, { status: 'Inactive' }, { new: true });
+
+    if (!updatedBoat) {
+      return res.status(404).send({ message: 'Boat not found' });
+    }
+
+    res.status(200).send({ message: 'Boat status updated to Inactive', boat: updatedBoat });
   } catch (error) {
-    res.status(500).send({ message: 'Failed to delete boat', error: error.message });
+    res.status(500).send({ message: 'Failed to update boat status', error: error.message });
   }
 });
 
@@ -143,7 +195,7 @@ router.delete('/boatsd/:id', async (req, res) => {
 router.put('/boatsd/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { boatName, boatType, description, price, capacity } = req.body;
+    const { boatName, boatType, description, price, priceType, capacity,location } = req.body;
 
     // Find the boat by ID and update it
     const updatedBoat = await Boatreg.findByIdAndUpdate(id, {
@@ -151,7 +203,9 @@ router.put('/boatsd/:id', async (req, res) => {
       boatType,
       description,
       price,
-      capacity
+      priceType, 
+      capacity,
+      location
     }, { new: true, runValidators: true });
 
     if (!updatedBoat) {
@@ -165,5 +219,113 @@ router.put('/boatsd/:id', async (req, res) => {
   }
 });
 
+
+router.get('/pending-boats', async (req, res) => {
+  try {
+    const pendingBoats = await Boatreg.find({ verified: false });
+    res.json(pendingBoats);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch pending boats' });
+  }
+});
+
+
+router.put('/approve/:boatId', async (req, res) => {
+  try {
+    const updatedBoat = await Boatreg.findByIdAndUpdate(
+      req.params.boatId,
+      { verified: true },
+      { new: true }
+    );
+    res.json(updatedBoat);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to approve boat' });
+  }
+});
+
+
+router.delete('/disapprove/:boatId', async (req, res) => {
+  try {
+    await Boat.findByIdAndDelete(req.params.boatId);
+    res.json({ message: 'Boat disapproved and deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to disapprove boat' });
+  }
+});
+
+// Route to check boat name
+router.post('/checkName', async (req, res) => {
+  const { boatName } = req.body;
+
+  try {
+    const boat = await Boatreg.findOne({ boatName: new RegExp(`^${boatName}$`, 'i') }); // Case insensitive search
+    if (boat) {
+      return res.json({ isTaken: true });
+    } else {
+      return res.json({ isTaken: false });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+router.post('/:boatId/unavailable-dates', async (req, res) => {
+  const { boatId } = req.params;
+  const { dates } = req.body; // Expecting an array of dates from the request body
+
+  if (!Array.isArray(dates) || dates.length === 0) {
+    return res.status(400).json({ error: 'Invalid dates format or no dates provided' });
+  }
+
+  try {
+    const updatedBoat = await Boatreg.findByIdAndUpdate(
+      boatId,
+      { $addToSet: { unavailableDates: { $each: dates } } }, // Add the provided dates to unavailableDates
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedBoat) {
+      return res.status(404).json({ error: 'Boat not found' });
+    }
+
+    res.json(updatedBoat);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+router.get('/:boatId/unavailable-dates', (req, res) => {
+  const { boatId } = req.params;
+  
+  Boatreg.findById(boatId, 'unavailableDates') // Fetch only the unavailableDates field
+    .then(boat => {
+      if (!boat) {
+        return res.status(404).json({ error: 'Boat not found' });
+      }
+      res.json(boat.unavailableDates); // Return only the unavailableDates field
+    })
+    .catch(err => res.status(500).json({ error: err.message }));
+});
+
+router.get('/menu/:boatId', async (req, res) => {
+  try {
+    const { boatId } = req.params;
+
+    // Fetch the boat by its ID from the database
+    const boat = await Boatreg.findById(boatId);
+
+    if (!boat) {
+      return res.status(404).json({ message: 'Boat not found' });
+    }
+
+    // Respond with the boat details
+    res.json(boat);
+  } catch (error) {
+    console.error('Error fetching boat details:', error);
+    res.status(500).json({ message: 'Server error, could not fetch boat details' });
+  }
+});
 
 module.exports = router;

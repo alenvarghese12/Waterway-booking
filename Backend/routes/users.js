@@ -68,30 +68,114 @@
 // module.exports = router;
 
 
+// const router = require("express").Router();
+// const { User, validate } = require("../model/userData");
+// const bcrypt = require("bcrypt");
+// const nodemailer = require("nodemailer");
+// const crypto = require("crypto");
+
+// router.post("/", async (req, res) => {
+//   try {
+//     const { error } = validate(req.body);
+//     if (error)
+//       return res.status(400).send({ message: error.details[0].message });
+
+//     const user = await User.findOne({ email: req.body.email });
+//     if (user)
+//       return res.status(409).send({ message: "User with given email already exists!" });
+
+//     const salt = await bcrypt.genSalt(Number(process.env.SALT));
+//     const hashPassword = await bcrypt.hash(req.body.password, salt);
+
+//     await new User({ ...req.body, password: hashPassword }).save();
+//     res.status(201).send({ message: "User created successfully" });
+//   } catch (error) {
+//     console.error("Error during user registration:", error); // Added detailed logging
+//     res.status(500).send({ message: "Internal Server Error" });
+//   }
+// });
+
+// module.exports = router;
+require('dotenv').config();
 const router = require("express").Router();
 const { User, validate } = require("../model/userData");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 router.post("/", async (req, res) => {
   try {
     const { error } = validate(req.body);
-    if (error)
-      return res.status(400).send({ message: error.details[0].message });
+    if (error) return res.status(400).send({ message: error.details[0].message });
 
     const user = await User.findOne({ email: req.body.email });
-    if (user)
-      return res.status(409).send({ message: "User with given email already exists!" });
+    if (user) return res.status(409).send({ message: "User with given email already exists!" });
 
     const salt = await bcrypt.genSalt(Number(process.env.SALT));
     const hashPassword = await bcrypt.hash(req.body.password, salt);
 
-    await new User({ ...req.body, password: hashPassword }).save();
-    res.status(201).send({ message: "User created successfully" });
+    // Generate OTP
+    const otp = crypto.randomBytes(3).toString("hex");
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+
+    // Create User with OTP and Inactive status
+    const newUser = new User({ 
+      ...req.body, 
+      password: hashPassword, 
+      otp, 
+      otpExpiresAt 
+    });
+    await newUser.save();
+
+    // Send OTP via email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL, // Your email
+        pass: process.env.PASSWORD // Your email password
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: req.body.email,
+      subject: 'Email Verification - Waterway Bookings',
+      text: `Your OTP is ${otp}. It will expire in 10 minutes.`
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.error("Error sending OTP email:", err);
+        return res.status(500).send({ message: "Failed to send OTP." });
+      }
+      res.status(201).send({ message: "OTP sent to email. Please verify." });
+    });
   } catch (error) {
-    console.error("Error during user registration:", error); // Added detailed logging
+    console.error("Error during registration:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+router.post("/verify-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send({ message: "User not found" });
+
+    if (user.otp !== otp) return res.status(400).send({ message: "Invalid OTP" });
+
+    if (user.otpExpiresAt < Date.now()) return res.status(400).send({ message: "OTP expired" });
+
+    user.status = "Active";
+    user.otp = undefined;  // Clear OTP after verification
+    user.otpExpiresAt = undefined;
+    await user.save();
+
+    res.status(200).send({ message: "Email verified successfully" });
+  } catch (error) {
     res.status(500).send({ message: "Internal Server Error" });
   }
 });
 
 module.exports = router;
-

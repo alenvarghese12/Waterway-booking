@@ -9,34 +9,53 @@ const BookingPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [peopleCount, setPeopleCount] = useState(1);
+  const [reservationStatus, setReservationStatus] = useState(''); // To handle reservation status
+
+  // Validate dates
+  const validateDates = () => {
+    if (boat.boatType === 'speed boat') return true; // No date validation for speed boats
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return start < end && !isNaN(start) && !isNaN(end); // Valid if start is before end
+  };
 
   // Calculate the price per head based on the boat type
   const calculatePricePerHead = () => {
-    if (peopleCount <= 0) return 0; // Avoid division by zero
+    if (peopleCount <= 0 || !validateDates()) return 0; // Avoid invalid cases
 
-    let duration = 1; // Default for speed boats (1 hour booking)
+    let duration = 1; // Default for speed boats (1-hour booking)
     
-    // Calculate duration in days if the boat type is not "speed boat"
     if (boat.boatType !== 'speed boat') {
       const start = new Date(startDate);
       const end = new Date(endDate);
-
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
-        duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24)); // Calculate days
-      } else {
-        return 0; // Invalid or incomplete date input
-      }
+      duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24)); // Calculate days
     }
 
-    // Calculate and return price per head
-    return (boat.price / peopleCount / duration).toFixed(2);
+    return (boat.price / peopleCount / duration).toFixed(2); // Price per head
+  };
+
+  // Handle reservation
+  const handleReservation = () => {
+    if (validateDates()) {
+      setReservationStatus('Reservation confirmed!'); // Show success message
+    } else {
+      setReservationStatus('Please select valid dates!'); // Show error message
+    }
+  };
+
+  // Handle booking confirmation
+  const handleBooking = () => {
+    if (validateDates() && peopleCount > 0) {
+      alert('Booking Confirmed!');
+      // Proceed with booking API or other logic
+    }
   };
 
   return (
     <div className="booking-page">
       <h2>Booking for {boat.boatName}</h2>
-      
-      {/* Check if it's not a speed boat to display date inputs */}
+
+      {/* Display date inputs for non-speed boats */}
       {boat.boatType !== 'speed boat' ? (
         <>
           <label>Start Date:</label>
@@ -55,7 +74,7 @@ const BookingPage = () => {
       ) : (
         <p>This is a 1-hour booking for a speed boat.</p>
       )}
-      
+
       <label>Number of People:</label>
       <input
         type="number"
@@ -63,10 +82,23 @@ const BookingPage = () => {
         onChange={(e) => setPeopleCount(e.target.value)}
         min="1"
       />
-      
+
       <p>Average Price per Head: Rs. {calculatePricePerHead()}</p>
 
-      <button className="confirm-booking-button">Confirm Booking</button>
+      {/* Reservation button */}
+      <button className="reservation-button" onClick={handleReservation}>
+        Reserve
+      </button>
+      {reservationStatus && <p className="reservation-status">{reservationStatus}</p>}
+
+      {/* Booking button, only enabled if inputs are valid */}
+      <button 
+        className="confirm-booking-button"
+        onClick={handleBooking}
+        disabled={!validateDates() || peopleCount <= 0}
+      >
+        Confirm Booking
+      </button>
     </div>
   );
 };

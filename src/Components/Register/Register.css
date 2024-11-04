@@ -154,4 +154,9 @@
   .google-signup-button .icon {
     margin-right: 8px; /* Space between icon and text */
   }
+  .error {
+    color: red;
+    font-size: 17px;
+    margin-top: 5px;
+  }
   

@@ -1,22 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './UserBoatList.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 
 const UserBoatList = () => {
   const [boats, setBoats] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { userDetails } = useOutletContext();
 
-  const handleBookNow = (boat) => {
-    navigate('/userint/booking', { state: { boat } }); // Navigating to the booking page with boat data
+  const handleViewDetails = (boat) => {
+    if (userDetails && userDetails.id && userDetails.name && userDetails.email) {
+      navigate('/userint/boatviewdetails', { 
+        state: { 
+          boat, 
+          userDetails: {
+            id: userDetails.id,
+            name: userDetails.name,
+            email: userDetails.email
+          }
+        } 
+      });
+    } else {
+      console.error('User details not available or incomplete');
+      // You might want to handle this case, perhaps by redirecting to login
+    }
   };
 
-  // Fetch boats from the backend
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
   useEffect(() => {
     const fetchBoats = async () => {
       try {
         const response = await axios.get('http://localhost:8080/api/boats/boatsd');
-        setBoats(response.data); // Store boat data in state
+        setBoats(response.data);
       } catch (error) {
         console.error('Failed to fetch boats', error);
       }
@@ -27,25 +54,29 @@ const UserBoatList = () => {
 
   return (
     <div className="boat-list-container">
-      <h2>Available Boats for Booking</h2>
       <div className="boat-grid">
         {boats.map((boat) => (
           <div key={boat._id} className="boat-card">
-              <img
-              src={`http://localhost:8080/uploads/${boat.image}`} // Assuming boat image is saved in an 'uploads' folder on the server
+             <h3>{boat.boatName}</h3>
+            <img
+              src={`http://localhost:8080/uploads/${boat.image}`}
               alt={boat.boatName}
               className="boat-image"
+              onClick={() => handleImageClick(`http://localhost:8080/uploads/${boat.image}`)}
             />
-            <h3>{boat.boatName}</h3>
-            <p><strong>Type:</strong> {boat.boatType}</p>
-            <p><strong>Price:</strong> Rs. {boat.price}</p>
-            <p><strong>Description:</strong> {boat.description}</p>
-            <p><strong>Capacity:</strong> {boat.capacity} people</p>
-            <p><strong>Speed:</strong> {boat.speed} km/h</p>
-            <button className="book-button" onClick={() => handleBookNow(boat)}>Book Now</button>
+           
+            <p><strong></strong>{boat.boatType}</p>
+            <button className="book-button" onClick={() => handleViewDetails(boat)}>View Details</button>
           </div>
         ))}
       </div>
+
+      {isModalOpen && (
+        <div className="modal" onClick={closeModal}>
+          <span className="close" onClick={closeModal}>&times;</span>
+          <img className="modal-image" src={selectedImage} alt="Zoomed" />
+        </div>
+      )}
     </div>
   );
 };

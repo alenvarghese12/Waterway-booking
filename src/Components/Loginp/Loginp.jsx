@@ -4,12 +4,16 @@ import { FaUser, FaLock } from "react-icons/fa";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { login, setLoading, setError } from '../store/userSlice'; // Import your actions
+
 
 const Loginp = () => {
   const [heroCount, setHero] = useState(4);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Initialize dispatch
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -17,27 +21,37 @@ const Loginp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
-      const url = "http://localhost:8080/api/auth/login";
-      console.log("Sending login request with:", formData); // Add logging
-      const { data: res } = await axios.post(url, formData);
-      console.log("Login response:", res); // Add logging
-  
-      if (res.redirectUrl) {
-        navigate(res.redirectUrl);
-      } else {
-        setError("Unexpected error during login.");
-      }
+        const url = "http://localhost:8080/api/auth/login";
+        console.log("Sending login request with:", formData); // Add logging
+        const { data: res } = await axios.post(url, formData);
+        console.log("Login response:", res); // Add logging
+
+        // Check if login was successful
+        if (res.redirectUrl) {
+            // Store email and token in localStorage
+            localStorage.setItem('email', formData.email); // Save the correct email
+            localStorage.setItem('token', res.token); // Save the token
+           
+
+
+            dispatch(login({ email: formData.email, token: res.token }));
+            // Navigate to the redirect URL
+            navigate(res.redirectUrl);
+        } else {
+          dispatch(setError("Server error. Please try again later.")); 
+        }
     } catch (error) {
-      console.error("Login error:", error); // Add logging
-      if (error.response && error.response.status >= 400 && error.response.status <= 500) {
-        setError(error.response.data.message);
-      } else {
-        setError("Server error. Please try again later.");
-      }
+        console.error("Login error:", error); // Add logging
+        if (error.response && error.response.status >= 400 && error.response.status <= 500) {
+          dispatch(setError(error.response.data.message)); 
+        } else {
+            setError("Server error. Please try again later.");
+        }
     }
-  };
+};
+
 
   const handleRegisterClick = (e) => {
     e.preventDefault();
@@ -53,6 +67,7 @@ const Loginp = () => {
           {error && <p className="error">{error}</p>}
           <div className="input-box">
             <input
+              id='email'
               type="text"
               name="email"
               placeholder='Email'
@@ -63,6 +78,7 @@ const Loginp = () => {
           </div>
           <div className="input-box">
             <input
+              id='password'
               type="password"
               name="password"
               placeholder='Password'
@@ -75,9 +91,9 @@ const Loginp = () => {
             <label>
               <input type='checkbox' /> Remember me
             </label>
-            <a href='#'>Forgot Password?</a>
+            <a href='/forgotp'>Forgot Password?</a>
           </div>
-          <button type='submit' className='loginb'>Login</button>
+          <button  id='login' type='submit' className='loginb'>Login</button>
           <div className="register-link">
             <p>Don't have an account? <a href='#' onClick={handleRegisterClick}>Register</a></p>
           </div>

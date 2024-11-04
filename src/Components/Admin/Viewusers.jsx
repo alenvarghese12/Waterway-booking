@@ -61,30 +61,59 @@ const Viewusers = () => {
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();  // Initialize navigate
 
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const response = await axios.get('http://localhost:8080/api/auth/users');
+  //       // Filter out admin users
+  //       const nonAdminUsers = response.data.filter(user => user.role !== 'admin');
+  //       setUsers(nonAdminUsers);
+  //     } catch (error) {
+  //       console.error('Failed to fetch users', error);
+  //     }
+  //   };
+
+  //   fetchUsers();
+  // }, []);
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get('http://localhost:8080/api/auth/users');
-        // Filter out admin users
-        const nonAdminUsers = response.data.filter(user => user.role !== 'admin');
-        setUsers(nonAdminUsers);
+        // Filter out inactive users
+        const activeUsers = response.data.filter(user => user.status === 'Active');
+        setUsers(activeUsers);
       } catch (error) {
         console.error('Failed to fetch users', error);
       }
     };
-
+  
     fetchUsers();
   }, []);
+  
+
+  // const handleDelete = async (userId) => {
+  //   try {
+  //     await axios.delete(`http://localhost:8080/api/auth/users/${userId}`);
+  //     // After deletion, update the users list
+  //     setUsers(users.filter(user => user._id !== userId));
+  //   } catch (error) {
+  //     console.error('Failed to delete user', error);
+  //   }
+  // };
 
   const handleDelete = async (userId) => {
     try {
+      // Mark the user as inactive in the backend
       await axios.delete(`http://localhost:8080/api/auth/users/${userId}`);
-      // After deletion, update the users list
+  
+      // Update the users list in the state to hide the inactive user
       setUsers(users.filter(user => user._id !== userId));
     } catch (error) {
-      console.error('Failed to delete user', error);
+      console.error('Failed to deactivate user', error);
     }
   };
+  
+  
 
   // Navigate to the edit page when the Edit button is clicked
   const handleEditClick = (userId) => {

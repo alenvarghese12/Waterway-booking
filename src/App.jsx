@@ -16,12 +16,21 @@ import BoatList from './Components/Boatowner/BoatList';
 import Boatlist from './Components/Admin/Boatlist';
 import UserBoatList from './Components/UserInt/UserBoatList';
 import BookingPage from './Components/UserInt/BookingPage';
+import ForgotPassword from './Components/Loginp/ForgotPassword';
+import ResetPassword from './Components/Loginp/ResetPassword';
+import VerifyOtp from './Components/Register/VerifyOtp';
+import BoatApproval from './Components/Admin/BoatApproval';
+import BoatOwnerDashboard from './Components/Boatowner/BoatOwnerDashboard';
+import LoadingSpinner from './Components/LoadingSpinner';
+import SearchResults from './Components/UserInt/SearchResults';
+import BoatViewDetails from './Components/UserInt/BoatViewDetails';
+import BoatMenu from './Components/Boatowner/BoatMenu';
 
 const AppWrapper = () => {
   const location = useLocation();
   
   // Define paths where Navbar should not be shown
-  const noNavbarPaths = [ '/userint/*', '/admin/*', '/boatowner/*'];  // Updated the admin path
+  const noNavbarPaths = [ '/userint/*', '/admin/*', '/boatowner/*','/reset-password'];  // Updated the admin path
 
   // Determine if Navbar should be rendered
   const showNavbar = !noNavbarPaths.includes(location.pathname);
@@ -36,6 +45,12 @@ const AppWrapper = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/userint" element={<UserInt />} />
         <Route path="/logout" element={<Logoutb />} />
+        <Route path="/forgotp" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/load" element={<LoadingSpinner />} />
+
+        
         {/* <Route path="/booking" element={<BookingPage />} /> */}
 
         {/* <Route path="/userboatl" element={<UserBoatList />} /> */}
@@ -47,19 +62,24 @@ const AppWrapper = () => {
           <Route path="viewusers" element={<Viewusers />} />
           <Route path="edituser/:id" element={<EditUser />} /> 
           <Route path="boatl" element={<Boatlist />} />
+          <Route path="boatapproval" element={<BoatApproval />} />
+          {/* <Route path="/search/:query" element={<SearchResults />} /> */}
           {/* Add more admin-related routes here */}
         </Route>
 
         <Route path="/boatowner/*" element={<Boatowner />}>
           <Route path="boatregister" element={<BoatRegistration />} />
           <Route path="boatlist" element={<BoatList />} />
+          <Route path="boatdashboard" element={<BoatOwnerDashboard />} />
+          <Route path="boatmenu/:boatId" element={<BoatMenu />} />
           
         </Route>
 
         <Route path="/userint/*" element={<UserInt />}>
           <Route path="userboatl" element={<UserBoatList />} />
           <Route path="booking" element={<BookingPage />} />
-     
+          <Route path="search/:query" element={<SearchResults />} />
+          <Route path="boatviewdetails" element={<BoatViewDetails />} />
           
         </Route>
 
